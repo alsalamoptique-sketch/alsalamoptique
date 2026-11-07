@@ -59,8 +59,9 @@ td input,td select{margin:0;text-align:center;padding:6px 4px}
 .admin{border-top:6px solid var(--tort);background:var(--glass)}
 .bar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
 .bar label{flex:1;min-width:240px}
-.list table{min-width:820px;background:var(--card)}
+.list table{min-width:980px;background:var(--card)}
 .list td{text-align:right}
+.bar-cell{position:relative;min-width:90px}.bar-cell i{position:absolute;inset:0 auto 0 0;background:var(--amber);opacity:.28;z-index:0}.bar-cell b{position:relative;z-index:1;font-weight:600}
 .empty{padding:20px;text-align:center;opacity:.7}
 .login{background:var(--glass);padding:22px 0;border-top:1px solid var(--line)}
 .login form{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
@@ -106,6 +107,8 @@ footer a{color:var(--ink)}
    <div class="grid">
     <label>الاسم الكامل<input id="name" required autocomplete="name"></label>
     <label>تاريخ الميلاد<input id="dob" type="date" required autocomplete="bday"></label>
+    <label>الجنس<select id="gender" required><option value="">اختر…</option><option>ذكر</option><option>أنثى</option></select></label>
+    <label>العمر (بالسنوات)<input id="age" type="number" min="1" max="120" inputmode="numeric" required></label>
     <label>رقم الهاتف<input id="phone" type="tel" inputmode="tel" required autocomplete="tel" placeholder="0555 00 00 00" dir="ltr" style="text-align:right"></label>
     <label>البريد الإلكتروني<input id="email" type="email" required autocomplete="email" dir="ltr" style="text-align:right"></label>
    </div>
@@ -164,11 +167,16 @@ footer a{color:var(--ink)}
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:30px"><button class="btn" id="sSave" type="button">حفظ بيانات التواصل</button><span id="sMsg" role="status"></span></div>
 
+  <h3 style="margin:0 0 8px">إحصائيات الطلبات الشهرية</h3>
+  <div class="bar"><label>الشهر<select id="stMonth"></select></label></div>
+  <div class="list" style="margin-bottom:14px"><table style="min-width:520px"><thead><tr><th>الفئة العمرية</th><th>ذكر</th><th>أنثى</th><th>غير محدد</th><th>المجموع</th></tr></thead><tbody id="stDetail"></tbody></table></div>
+  <div class="list" style="margin-bottom:30px"><table style="min-width:760px"><thead><tr><th>الشهر</th><th>الطلبات</th><th>ذكر</th><th>أنثى</th><th>أقل من 18</th><th>18–29</th><th>30–44</th><th>45–59</th><th>60 فأكثر</th><th>متوسط العمر</th></tr></thead><tbody id="stAll"></tbody></table><div id="stNone" class="empty" hidden>لا توجد بيانات بعد.</div></div>
+
   <h3 style="margin:0 0 8px">تغيير رمز المدير</h3>
   <div class="bar"><label>الرمز الجديد (6 أحرف على الأقل)<input id="nk" type="password" dir="ltr" autocomplete="new-password"></label><button class="btn alt" id="nksave" type="button">حفظ الرمز</button><span id="nkmsg" role="status"></span></div>
   <h3 style="margin:24px 0 8px">الطلبات</h3>
-  <div class="bar"><label>ابحث بالاسم أو الهاتف أو البريد<input id="q" type="search" placeholder="اكتب للبحث الفوري"></label><button class="btn alt" id="reload" type="button">تحديث</button><button class="btn" id="xls" type="button">تحميل Excel</button><button class="btn alt" id="logout" type="button">خروج</button></div>
-  <div class="list"><table><thead><tr><th>التاريخ</th><th>الاسم</th><th>الهاتف</th><th>الميلاد</th><th>البريد</th><th>المقاس (بعيد | قريب)</th><th>الدفع</th><th>المجموع</th><th>الحالة / إشعار</th></tr></thead><tbody id="rows"></tbody></table><div id="none" class="empty" hidden>لا توجد طلبات مطابقة.</div></div>
+  <div class="bar"><label>ابحث بالاسم أو الهاتف (يقبل 0 في البداية) أو تاريخ الطلب<input id="q" type="search" placeholder="مثال: 0555 · 2026-11 · 07/11/2026 · أنثى"></label><button class="btn alt" id="reload" type="button">تحديث</button><button class="btn" id="xls" type="button">تحميل Excel</button><button class="btn alt" id="logout" type="button">خروج</button></div>
+  <div class="list"><table><thead><tr><th>تاريخ الطلب</th><th>الاسم</th><th>الجنس</th><th>العمر</th><th>الهاتف</th><th>الميلاد</th><th>البريد</th><th>المقاس (بعيد | قريب)</th><th>الدفع</th><th>المجموع</th><th>الحالة / إشعار</th></tr></thead><tbody id="rows"></tbody></table><div id="none" class="empty" hidden>لا توجد طلبات مطابقة.</div></div>
  </div>
 </section>
 
@@ -176,7 +184,7 @@ footer a{color:var(--ink)}
 <footer><a href="#" id="login">دخول المحل</a> · نظارات السلام الطبية · تُراجع جميع الطلبات هاتفياً قبل التصنيع</footer>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbxYZEiYxAguVj_-B0h4kxX6Xfad7FcoAQSv55HVO6EdqOsC4q04GI7fBOtK1nwLYNiDNA/exec";   // ضع هنا رابط Web app من Apps Script
+const API="PUT_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";   // ضع هنا رابط Web app من Apps Script
 const $=id=>document.getElementById(id);
 const RX=["odfs","odfc","odfa","odns","odnc","odna","osfs","osfc","osfa","osns","osnc","osna"];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -207,6 +215,7 @@ function show(t,c){const m=$("msg");m.className="msg "+c;m.textContent=t}
 function fill(id,arr){$(id).innerHTML=arr.map(x=>`<option value="${esc(x.name)}" data-p="${x.price}">${esc(x.name)} – ${fmt(x.price)} دج</option>`).join("")}
 function total(){const p=i=>+($(i).selectedOptions[0]?.dataset.p||0);const t=p("frame")+p("lens");$("sum").textContent=fmt(t);return t}
 $("frame").onchange=$("lens").onchange=total;
+$("dob").onchange=()=>{const d=new Date($("dob").value);if(isNaN(d))return;const n=new Date();let a=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))a--;if(a>=1&&a<=120)$("age").value=a};
 let settings={};
 function loadPublicPrices(){return get("").then(p=>{fill("frame",p.frames||[]);fill("lens",p.lenses||[]);total();settings=p.settings||{};renderContact();fillSettings()})}
 const httpsOk=u=>/^https:\/\/\S+$/.test(u||"");
@@ -237,7 +246,10 @@ $("f").addEventListener("submit",async e=>{
  if(!/^[+\d\s]{8,16}$/.test(phone))return show("رقم الهاتف غير صالح. اكتب أرقاماً فقط.","err");
  if(!/^\S+@\S+\.\S+$/.test(email))return show("البريد الإلكتروني غير صالح.","err");
  if(!$("frame").value||!$("lens").value||!$("frame").selectedOptions[0].dataset.p)return show("اختر الإطار والعدسات بعد تحميل الأسعار.","err");
- const o={type:"order",name,dob,phone,email,frame:$("frame").value,lens:$("lens").value,pay:document.querySelector("[name=pay]:checked").value};
+ const gender=$("gender").value,age=$("age").value.trim();
+ if(!gender)return show("اختر الجنس.","err");
+ if(!(+age>=1&&+age<=120))return show("اكتب العمر بين 1 و120.","err");
+ const o={type:"order",name,dob,phone,email,gender,age,frame:$("frame").value,lens:$("lens").value,pay:document.querySelector("[name=pay]:checked").value};
  RX.forEach(k=>o[k]=$(k).value.trim());
  $("go").disabled=true;
  try{
@@ -264,7 +276,7 @@ async function loadAdmin(){
  try{
   const r=await post({type:"orders",key});
   if(r.error){$("lmsg").textContent="";return false}
-  orders=r.orders||[];$("admin").hidden=false;draw();loadPrices();
+  orders=r.orders||[];$("admin").hidden=false;draw();drawStats();loadPrices();
   return true;
  }catch(e){$("lmsg").textContent=e.message;return null}
 }
@@ -273,21 +285,30 @@ async function loadAdmin(){
 const rxText=r=>{const g=i=>r.slice(i,i+3).map(v=>v||"–").join("/");return "يمين: "+g(6)+" | "+g(9)+" ‏ يسار: "+g(12)+" | "+g(15)};
 const ar2en=t=>t.replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d));
 const nat=t=>ar2en(String(t)).replace(/\D/g,"").replace(/^(00)?213/,"").replace(/^0+/,"");   // يوحّد 0555 و555 و+213555
+function dateKey(q){   // يحوّل 07/11/2026 أو 11/2026 أو 2026-11 إلى جزء من yyyy-mm-dd
+ let m;const p=n=>String(n).padStart(2,"0");
+ if(m=q.match(/^(20\d\d)-(\d{1,2})(?:-(\d{1,2}))?$/))return m[1]+"-"+p(m[2])+(m[3]?"-"+p(m[3]):"");
+ if(m=q.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d\d)$/))return m[3]+"-"+p(m[2])+"-"+p(m[1]);
+ if(m=q.match(/^(\d{1,2})[\/.-](20\d\d)$/))return m[2]+"-"+p(m[1]);
+ return null;
+}
 function filtered(){
  const q=ar2en($("q").value.trim()).toLowerCase();
  if(!q)return orders;
+ const dk=dateKey(q);
+ if(dk){const r=orders.filter(o=>String(o[1]).includes(dk));if(r.length)return r}
  if(/^[\d\s+()-]+$/.test(q)){              // بحث رقمي: يقبل 0 في البداية وأي صيغة
   const nq=nat(q),raw=q.replace(/\D/g,"");
   return orders.filter(o=>nq?nat(o[4]).includes(nq):String(o[4]).replace(/\D/g,"").includes(raw));
  }
- return orders.filter(o=>[o[2],o[4],o[5]].join(" ").toLowerCase().includes(q));
+ return orders.filter(o=>[o[2],o[4],o[5],o[1],o[23]].join(" ").toLowerCase().includes(q));
 }
 function draw(){
  const r=filtered();
  $("rows").innerHTML=r.map(o=>{
   const msg=encodeURIComponent("مرحباً "+o[2]+"، نظارتك جاهزة للاستلام في نظارات السلام الطبية.");
   const ready=o[22]==="جاهز"||o[22]==="تم التسليم";
-  return `<tr><td>${esc(o[1])}</td><td>${esc(o[2])}</td><td dir="ltr">${esc(o[4])}</td><td>${esc(o[3])}</td><td dir="ltr">${esc(o[5])}</td><td dir="ltr" style="font-size:13px">${esc(rxText(o))}</td><td>${esc(o[20])}</td><td>${fmt(o[21]||0)} دج</td><td>${esc(o[22])}<br>${ready?"":`<button class="btn alt sm" data-id="${esc(o[0])}" type="button">جاهز + بريد</button> `}<a href="sms:${esc(o[4])}?body=${msg}">رسالة SMS</a></td></tr>`}).join("");
+  return `<tr><td>${esc(o[1])}</td><td>${esc(o[2])}</td><td>${esc(o[23]||"–")}</td><td>${esc(o[24]||"–")}</td><td dir="ltr">${esc(o[4])}</td><td>${esc(o[3])}</td><td dir="ltr">${esc(o[5])}</td><td dir="ltr" style="font-size:13px">${esc(rxText(o))}</td><td>${esc(o[20])}</td><td>${fmt(o[21]||0)} دج</td><td>${esc(o[22])}<br>${ready?"":`<button class="btn alt sm" data-id="${esc(o[0])}" type="button">جاهز + بريد</button> `}<a href="sms:${esc(o[4])}?body=${msg}">رسالة SMS</a></td></tr>`}).join("");
  $("none").hidden=r.length>0;
 }
 $("q").oninput=draw;
@@ -320,6 +341,36 @@ $("psave").onclick=async()=>{
  }catch(x){m.textContent=x.message}
 };
 
+/* ---- الإحصائيات الشهرية ---- */
+const GN=["ذكر","أنثى"],AG=["أقل من 18","18–29","30–44","45–59","60 فأكثر","غير محدد"];
+const ageGrp=a=>{a=parseInt(a,10);return isNaN(a)?5:a<18?0:a<30?1:a<45?2:a<60?3:4};
+function statsData(){
+ const M={};
+ orders.forEach(o=>{const k=String(o[1]).slice(0,7);if(!/^\d{4}-\d\d$/.test(k))return;
+  const m=M[k]||(M[k]={n:0,g:[0,0,0],grid:AG.map(()=>[0,0,0]),ages:[]});
+  const gi=GN.indexOf(o[23]),gx=gi<0?2:gi,ai=ageGrp(o[24]);
+  m.n++;m.g[gx]++;m.grid[ai][gx]++;if(!isNaN(parseInt(o[24],10)))m.ages.push(+o[24]);});
+ return M;
+}
+const avg=a=>a.length?(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1):"–";
+function monthLabel(k){const[y,m]=k.split("-");return["جانفي","فيفري","مارس","أفريل","ماي","جوان","جويلية","أوت","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][+m-1]+" "+y}
+function drawStats(){
+ const M=statsData(),keys=Object.keys(M).sort().reverse(),sel=$("stMonth"),cur=sel.value;
+ $("stNone").hidden=keys.length>0;
+ sel.innerHTML=keys.map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join("");
+ if(keys.includes(cur))sel.value=cur;
+ $("stAll").innerHTML=keys.map(k=>{const m=M[k],ag=AG.slice(0,5).map((_,i)=>m.grid[i].reduce((x,y)=>x+y,0));
+  return `<tr><td>${monthLabel(k)}</td><td><b>${m.n}</b></td><td>${m.g[0]}</td><td>${m.g[1]}</td>${ag.map(v=>`<td>${v}</td>`).join("")}<td>${avg(m.ages)}</td></tr>`}).join("");
+ const m=M[sel.value];
+ if(!m){$("stDetail").innerHTML="";return}
+ const mx=Math.max(1,...m.grid.flat());
+ $("stDetail").innerHTML=AG.map((n,i)=>{const r=m.grid[i],t=r[0]+r[1]+r[2];
+  const c=v=>`<td class="bar-cell"><i style="width:${Math.round(v/mx*100)}%"></i><b>${v}</b></td>`;
+  return `<tr><td>${n}</td>${c(r[0])}${c(r[1])}${c(r[2])}<td><b>${t}</b></td></tr>`}).join("")+
+  `<tr><th>المجموع</th><th>${m.g[0]}</th><th>${m.g[1]}</th><th>${m.g[2]}</th><th>${m.n}</th></tr>`;
+}
+$("stMonth").onchange=drawStats;
+function statsAoa(){const M=statsData();return[["الشهر","الطلبات","ذكر","أنثى","غير محدد",...AG,"متوسط العمر"],...Object.keys(M).sort().map(k=>{const m=M[k];return[k,m.n,...m.g,...AG.map((_,i)=>m.grid[i].reduce((x,y)=>x+y,0)),avg(m.ages)]})]}
 $("sSave").onclick=async()=>{
  const m=$("sMsg"),E={bad_map:"رابط الخريطة يجب أن يبدأ بـ https://",bad_facebook:"رابط فيسبوك غير صالح (https://facebook.com/...)",bad_whatsapp:"رقم الواتساب غير صالح",bad_email:"البريد الإلكتروني غير صالح"};
  m.textContent="جارٍ الحفظ…";
@@ -327,18 +378,18 @@ $("sSave").onclick=async()=>{
   if(r.ok){settings=r.settings;renderContact();fillSettings();m.textContent="تم الحفظ."}else m.textContent=E[r.error]||"تعذّر الحفظ."}
  catch(x){m.textContent=x.message}
 };
-const HEAD=["المعرّف","التاريخ","الاسم الكامل","تاريخ الميلاد","الهاتف","البريد","يمين-بعيد SPH","يمين-بعيد CYL","يمين-بعيد AXIS","يمين-قريب SPH","يمين-قريب CYL","يمين-قريب AXIS","يسار-بعيد SPH","يسار-بعيد CYL","يسار-بعيد AXIS","يسار-قريب SPH","يسار-قريب CYL","يسار-قريب AXIS","الإطار","العدسات","الدفع","المجموع (دج)","الحالة"];
+const HEAD=["المعرّف","التاريخ","الاسم الكامل","تاريخ الميلاد","الهاتف","البريد","يمين-بعيد SPH","يمين-بعيد CYL","يمين-بعيد AXIS","يمين-قريب SPH","يمين-قريب CYL","يمين-قريب AXIS","يسار-بعيد SPH","يسار-بعيد CYL","يسار-بعيد AXIS","يسار-قريب SPH","يسار-قريب CYL","يسار-قريب AXIS","الإطار","العدسات","الدفع","المجموع (دج)","الحالة","الجنس","العمر"];
 function saveBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
 function loadXlsx(){return window.XLSX?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
 $("xls").onclick=async()=>{
- const rows=filtered().map(o=>o.map((v,i)=>i===21&&v!==""&&!isNaN(v)?Number(v):v));
+ const rows=filtered().map(o=>o.map((v,i)=>(i===21||i===24)&&v!==""&&!isNaN(v)?Number(v):v));
  const name="orders-"+new Date().toISOString().slice(0,10);
  if(!rows.length){alert("لا توجد طلبات لتحميلها.");return}
  try{
   await loadXlsx();
   const ws=XLSX.utils.aoa_to_sheet([HEAD,...rows]);
   ws["!cols"]=HEAD.map((h,i)=>({wch:[2,3,4,5].includes(i)?22:i>=18?26:14}));
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Orders");
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Orders");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(statsAoa()),"إحصائيات");
   XLSX.writeFile(wb,name+".xlsx");
  }catch(e){   // بديل: CSV يفتح في Excel
   const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
